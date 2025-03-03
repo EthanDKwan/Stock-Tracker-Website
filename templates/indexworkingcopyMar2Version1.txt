@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Tracker</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #00bcd4, #8e44ad);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            height: 100vh;
+            flex-direction: row;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+	    text-align: center;
+        }
+	#main-container {
+  	    display: flex;
+	    flex-direction: column;
+    	    justify-content: flex-start;
+    	    align-items: flex-start;
+	    margin-right: 50px;
+	    max-width:400px;
+	}
+        #ticker-form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #ticker-form input {
+            padding: 10px;
+            font-size: 18px;
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        #ticker-form button {
+            padding: 10px;
+            font-size: 18px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #ticker-form button:hover {
+            background-color: #2980b9;
+        }
+
+        #stock-info {
+            display: none;
+	    background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        #stock-info p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        #stock-info span {
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+	#graph-container {
+	    width:100%;
+	    display:flex;
+	    justify-content:center;
+	    flex-direction:column;
+	    align-items:center;
+	    gap: 20px;
+	}
+	#stock-chart, #macd-chart {
+	    width: 100%;
+	    max-width: 1000px;
+	    height: 400px;
+	    margin-bottom: 20px;
+	}
+
+    </style>
+</head>
+<body>
+    
+<div id = "main-container">
+	<h1>Stock Tracker</h1>
+    <!-- Form to input the ticker -->
+    <form id="ticker-form">
+        <label for="ticker">Enter Ticker:</label>
+        <input type="text" id="ticker" name="ticker" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Placeholder for the current stock price -->
+    <div id="stock-info">
+        <p>Current Price: <span id="current_price">N/A</span></p>
+	<p>Current 20-day SMA: <span id="current_20_day_sma">N/A</span></p>
+	<p>Current 50-day SMA: <span id="current_50_day_sma">N/A</span></p>
+	<p>Current MACD: <span id="current_macd">N/A</span></p>
+	<p>Current Signal line: <span id="current_signal_line">N/A</span></p>
+	<p>Current Histogram: <span id="current_histogram">N/A</span></p>
+	<p>Current Buy Suggestion: <span id="current_buy_signal">N/A</span></p>
+	<p>Most recent Buy suggestion: <span id="most_recent_buy_signal_date">N/A</span></p>
+	<p>Current Sell Suggestion: <span id="current_sell_signal">N/A</span></p>
+	<p>Most recent Sell suggestion: <span id="most_recent_sell_signal_date">N/A</span></p>
+
+    </div>
+</div>
+
+
+<div id = "graph-container">
+	<div id="stock-chart"></div>
+	<div id="macd-chart"></div>
+</div>
+
+
+
+
+
+
+ 
+<script>
+    // Function to handle the form submission and fetch stock data
+    $('#ticker-form').submit(function(event) {
+        event.preventDefault();
+        var ticker = $('#ticker').val();
+
+        // Clear previous graphs before fetching new data
+        Plotly.purge('stock-chart');
+        Plotly.purge('macd-chart');
+
+        // Make an AJAX request to the Flask backend
+        $.getJSON('/get_stock_data', { ticker: ticker }, function(data) {
+            console.log("Data received from backend:", data); // Debugging: Log the received data
+
+            if (data.error) {
+                alert(data.error);
+            } else {
+                // Update the page with the current stock data
+                $('#current_price').text(data.current_price);
+                $('#current_20_day_sma').text(data.current_20_day_sma);
+                $('#current_50_day_sma').text(data.current_50_day_sma);
+                $('#current_buy_signal').text(data.current_buy_signal);
+                $('#most_recent_buy_signal_date').text(data.most_recent_buy_signal_date);
+                $('#current_sell_signal').text(data.current_sell_signal);
+                $('#most_recent_sell_signal_date').text(data.most_recent_sell_signal_date);
+                $('#current_macd').text(data.current_macd);
+                $('#current_signal_line').text(data.current_signal_line);
+                $('#current_histogram').text(data.current_histogram);
+		
+		// show stock-info box
+		$('#stock-info').css('display', 'block');
+
+                // Prepare data for Plotly
+                var trace1 = {
+                    x: data.dates,
+                    y: data.closing_prices,
+                    mode: 'lines+markers',
+                    name: 'Closing Price'
+                };
+                var trace2 = {
+                    x: data.dates,
+                    y: data['20_day_smas'],
+                    mode: 'lines+markers',
+                    name: '20-day SMA'
+                };
+                var trace3 = {
+                    x: data.dates,
+                    y: data['50_day_smas'],
+                    mode: 'lines+markers',
+                    name: '50-day SMA'
+                };
+                var trace4 = {
+                    x: data.dates,
+                    y: data.macd,
+                    mode: 'lines+markers',
+                    name: 'MACD'
+                };
+                var trace5 = {
+                    x: data.dates,
+                    y: data.histogram,
+                    mode: 'lines+markers',
+                    name: 'Histogram'
+                };
+                var trace6 = {
+                    x: data.dates,
+                    y: data.signal_line,
+                    mode: 'lines+markers',
+                    name: 'Signal Line'
+                };
+
+                // Create data arrays for each plot
+                var plotData1 = [trace1, trace2, trace3];
+                var plotData2 = [trace4, trace5, trace6];
+
+                // Add buy/sell signals if they exist
+                if (data.buy_signal_dates && data.buy_signal_dates.length > 0) {
+    console.log("Adding buy signals:", data.buy_signal_dates); // Debugging: Log buy signals
+
+    // Debugging: Verify the closing prices and histogram values for buy signals
+    var buySignalYValues1 = data.buy_signal_dates.map(function(date) {
+        var index = data.dates.indexOf(date);
+        console.log("Buy Signal Date:", date, "Index:", index, "Closing Price:", data.closing_prices[index]);
+        return data.closing_prices[index];
+    });
+
+    var buySignalYValues2 = data.buy_signal_dates.map(function(date) {
+        var index = data.dates.indexOf(date);
+        console.log("Buy Signal Date:", date, "Index:", index, "Histogram Value:", data.histogram[index]);
+        return data.histogram[index];
+    });
+
+    // Buy signals for Graph 1 (Price and SMAs)
+    var traceBuySignal1 = {
+        x: data.buy_signal_dates,
+        y: buySignalYValues1,
+        mode: 'markers',
+        name: 'Buy Signal',
+        marker: { symbol: 'cross', size: 12, color: 'green' }
+    };
+
+    // Buy signals for Graph 2 (MACD and Histogram)
+    var traceBuySignal2 = {
+        x: data.buy_signal_dates,
+        y: buySignalYValues2,
+        mode: 'markers',
+        name: 'Buy Signal',
+        marker: { symbol: 'cross', size: 12, color: 'green' }
+    };
+
+    plotData1.push(traceBuySignal1);
+    plotData2.push(traceBuySignal2);
+}
+
+if (data.sell_signal_dates && data.sell_signal_dates.length > 0) {
+    console.log("Adding sell signals:", data.sell_signal_dates); // Debugging: Log sell signals
+
+    // Debugging: Verify the closing prices and histogram values for sell signals
+    var sellSignalYValues1 = data.sell_signal_dates.map(function(date) {
+        var index = data.dates.indexOf(date);
+        console.log("Sell Signal Date:", date, "Index:", index, "Closing Price:", data.closing_prices[index]);
+        return data.closing_prices[index];
+    });
+
+    var sellSignalYValues2 = data.sell_signal_dates.map(function(date) {
+        var index = data.dates.indexOf(date);
+        console.log("Sell Signal Date:", date, "Index:", index, "Histogram Value:", data.histogram[index]);
+        return data.histogram[index];
+    });
+
+    // Sell signals for Graph 1 (Price and SMAs)
+    var traceSellSignal1 = {
+        x: data.sell_signal_dates,
+        y: sellSignalYValues1,
+        mode: 'markers',
+        name: 'Sell Signal',
+        marker: { symbol: 'x', size: 12, color: 'red' }
+    };
+
+    // Sell signals for Graph 2 (MACD and Histogram)
+    var traceSellSignal2 = {
+        x: data.sell_signal_dates,
+        y: sellSignalYValues2,
+        mode: 'markers',
+        name: 'Sell Signal',
+        marker: { symbol: 'x', size: 12, color: 'red' }
+    };
+
+    plotData1.push(traceSellSignal1);
+    plotData2.push(traceSellSignal2);
+}
+
+                // Define layouts for each plot
+                var layout1 = {
+                    title: ticker + ' Price and SMAs',
+                    xaxis: { title: 'Date', tickangle: 45 },
+                    yaxis: { title: 'Price (USD)' }
+                };
+
+                var layout2 = {
+                    title: ticker + ' MACD',
+                    xaxis: { title: 'Date', tickangle: 45 },
+                    yaxis: { title: 'MACD Value' }
+                };
+
+                // Debugging: Log the plot data and layouts
+                console.log("Plot 1 Data:", plotData1);
+                console.log("Plot 2 Data:", plotData2);
+                console.log("Layout 1:", layout1);
+                console.log("Layout 2:", layout2);
+
+                // Render the plots
+                Plotly.newPlot('stock-chart', plotData1, layout1);
+                Plotly.newPlot('macd-chart', plotData2, layout2);
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error("AJAX request failed:", textStatus, errorThrown); // Debugging: Log AJAX errors
+            alert('Error retrieving stock data.');
+        });
+    });
+</script>
+
+</body>
+</html>
