@@ -1,11 +1,57 @@
-March 3rd, 2025
-- Ethan D. Kwan
-This was a project I conceived and began working on around February 2nd, 2025. The idea was to develop a tool for stock market tracking that would help me put into practice miscellaneous knowledge about trading stocks as well as a platform to learn more about developing software tools. 
+# Stock Tracker
 
-Problem statement: the casual stock trader/investor does not continuously monitor stock movement nor incorporate short-term stock price movement (such as due to news, financial reports, patents, etc). Rather, they may buy a market-conglomerate ETF and set-and-forget their money. While this is a proven and effective strategy, there is the yet-unsolved question of whether a trading strategy can be developed to beat the market. Furthermore, as a casual trader, there is the additional hurdle of trying to beat the set-and-forget strategy with minimal attention, knowledge, and time.
+A web application for tracking stock prices and generating buy/sell signals using historical and real-time data.
 
-Concept: The concept is a semi-automated rule-based trading algorithm to provide trading suggestions that will run continuously in the background and notify the user whenever a potential trading opportunity may exist, based on the pre-defined strategies, suggesting a trading action, and minimizing attention, time, and knowledge requirements while beating the market.
-- Note: Obviously, this goal is the challenge of multi-trillion-dollar financial industries and I don't expect to be able to solve this myself, but I do hope to be able to learn something and build something interesting.
+## Features
+- **Real-time stock price tracking**: Monitor live stock prices.
+- **Buy/sell signal generation**: Based on technical indicators (e.g., SMA, MACD).
+- **Interactive graphs**: Visualize data using Plotly.
+- **Notifications**: Get alerts for buy/sell signals (coming soon).
 
-Looking forward to the journey on this project
-- Ethan :]
+## Technologies Used
+- **Frontend**: HTML, CSS, JavaScript, Plotly
+- **Backend**: Python, Flask
+- **APIs**: yfinance, AlphaVantage API
+
+## Installation
+1. Clone the repository: 
+- git clone https://github.com/your-username/stock-tracker.git)
+
+Install dependencies: 
+- pip install -r requirements.txt
+
+Run the Flask app:
+- python app.py
+Open your browser and navigate to http://localhost:5000.
+
+
+Usage
+Enter a stock ticker (e.g., AAPL) to view historical data and buy/sell signals.
+
+Real-time updates and notifications are available in the live version.
+
+About the Project
+Problem Statement
+The casual stock trader/investor often does not continuously monitor stock movements or incorporate short-term price changes (e.g., due to news, financial reports, or patents). Instead, they may buy a market-conglomerate ETF and adopt a "set-and-forget" strategy. While effective, this raises the question: Can a more informed trading strategy be implemented to help while requiring minimal attention, knowledge, and time?
+
+Concept
+This project explores a semi-automated, rule-based trading algorithm that:
+
+Runs continuously in the background.
+
+Notifies users of potential trading opportunities based on pre-defined strategies.
+
+Minimizes attention, time, and knowledge requirements while aiming to outperform the market.
+
+Note: This goal is a challenge even for multi-trillion-dollar financial industries. While I don’t expect to solve it entirely, I hope to learn and build something interesting along the way.
+
+Author
+Ethan D. Kwan
+This project was conceived and developed starting February 2nd, 2025, as a platform to practice trading knowledge and software development skills.
+
+## License
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
+
+Looking forward to the journey on this project!
+
+Ethan :]
