@@ -165,7 +165,7 @@ def get_stock_data():
     #print("buy signal dates : ", buy_signal_dates)
     
     
-    #Sell Strategy 1
+    #Sell Strategy 1a  
     #Sell 50% of current positions when Current price >1.1*20day SMA && number of days since last sell order >=3days
     stock_data2['sell_signal'] = False
     most_recent_sell_signal_date = None
@@ -186,6 +186,22 @@ def get_stock_data():
         sell_signal_dates = [date.strftime('%Y-%m-%d') for date in sell_signal_dates]
         most_recent_sell_signal_date = stock_data2[stock_data2['sell_signal'] == True].index[-1]
     current_sell_signal = "sell 50% max" if stock_data2['sell_signal'].iloc[-1] else "WAIT"
+    
+    #Sell Strategy 1b (Same strategy, but with pseudo-real time price data)
+    live_sell_signal = False
+    most_recent_live_sell_signal_date = None
+    if live_price > (1.1 *stock_data2['20-day SMA'].iloc[-1]):
+        most_recent_live_sell_signal_date = live_price.index[-1]
+        if most_recent_sell_signal_date is None or (most_recent_sell_signal_date - most_recent_live_sell_signal) >=3:
+            live_sell_signal = True
+            most_recent_live_sell_signal_datetime = livetime
+        
+        
+    
+    
+    
+    
+    
     
     print("stock data2 with close fix?: ", stock_data2[['Close','Fixed-Close', '20-day SMA', 'buy_signal','sell_signal']])
     print("buy signal dates : ", buy_signal_dates)
