@@ -30,7 +30,8 @@ def fetch_stock_data_av_live(ticker):
         # If the cache is still valid (i.e., not expired)
         if datetime.now() - cached_time < CACHE_EXPIRY_TIME:
             print("Returning cached price")
-            return cached_time.strftime("%Y-%m-%d %H:%M:%S"), cached_price   
+            return cached_time.strftime("%Y-%m-%d %H:%M:%S"), cached_price
+        
     api_key = "41EYMBMQ0JRE5872"  # Your Alpha Vantage API key
     url = "https://www.alphavantage.co/query"
     params = {
@@ -38,6 +39,7 @@ def fetch_stock_data_av_live(ticker):
         "symbol": ticker,
         "apikey": api_key
     }
+
     response = requests.get(url, params=params)
     data = response.json()
     # Check if the data exists and return the current price and time
@@ -48,6 +50,8 @@ def fetch_stock_data_av_live(ticker):
     else:
         return None, None  # Return None if data is missing or invalid
 """
+
+
 """#COMMENTING OUT AlphaVantageAPI daily data fetch
 def fetch_stock_data_av_daily(ticker):
     API_KEY = "41EYMBMQ0JRE5872"  # Your Alpha Vantage API key
@@ -60,8 +64,10 @@ def fetch_stock_data_av_daily(ticker):
     }
     response = requests.get(url,params=params)
     data = response.json()
+
     if "Time Series (Daily)" not in data:
         raise RuntimeError("Alpha Vantage API error: " + str(data))
+
     df = pd.DataFrame.from_dict(data["Time Series (Daily)"], orient="index")
     # Rename columns to match Yahoo Finance format
     df = df.rename(columns={
@@ -71,182 +77,13 @@ def fetch_stock_data_av_daily(ticker):
         "4. close": "Close",
         "5. volume": "Volume"
     })
+
+
     df.index = pd.to_datetime(df.index)  # Convert index to datetime format
     df = df.sort_index()  # Ensure it's sorted in chronological order
     df = df.astype(float)
     return df.tail(120)  # Return the most recent 120 days
 """
-
-#Adding in modular helper functions:
-def fetch_stock_data(ticker= "SPY", period="120d", interval="1d"):
-    """
-    Fetch stock data for a given ticker using yfinance.
-    
-    Args:
-        ticker (str): The stock ticker symbol. (make default SPY??)
-        period (str): The period of historical data to fetch (default: "120d").
-        interval (str): The interval between data points (default: "1d").
-    
-    Returns:
-        pd.DataFrame: Stock data with columns like 'Close', 'High', 'Low', etc.
-    
-    Raises:
-        ValueError: If no data is found for the ticker.
-    """
-    stock_data = yf.download(ticker, period=period, interval=interval)
-    if stock_data.empty:
-        raise ValueError(f"No data found for ticker: {ticker}")
-    stock_data['Ticker'] = ticker
-    
-    #ticker = yf.Ticker(ticker)
-    #live_price = ticker.info['regularMarketPrice']
-    live_price = yf.Ticker(ticker).info('regularMarketPrice')
-    stock_data['Live_Price'] = live_price
-    return stock_data
-    
-    
-def calculate_indicators(stock_data):
-    """
-    Calculate technical indicators for the stock data. Facilitates computing indicators for multiple tickers, such as hard-coded, default, and user inputted
-    
-    Args:
-        stock_data (pd.DataFrame): Raw Stock data with columns that include 'Close' closing price
-    
-    Returns:
-        pd.DataFrame: Stock data with added columns for various technical indicators.
-    """
-    # Calculate SMAs
-    stock_data['10-day SMA'] = stock_data['Close'].rolling(window=10).mean()
-    stock_data['20-day SMA'] = stock_data['Close'].rolling(window=20).mean()
-    stock_data['50-day SMA'] = stock_data['Close'].rolling(window=50).mean()
-    
-    # Calculate MACD
-    stock_data['12-day EMA'] = stock_data['Close'].ewm(span=12, adjust=False).mean()
-    stock_data['26-day EMA'] = stock_data['Close'].ewm(span=26, adjust=False).mean()
-    stock_data['MACD'] = stock_data['12-day EMA'] - stock_data['26-day EMA']
-    stock_data['Signal_Line'] = stock_data['MACD'].ewm(span=9, adjust=False).mean()
-    stock_data['Histogram'] = stock_data['MACD'] - stock_data['Signal_Line']
-    
-    #necessary to remove nans? i.e.
-    stock_data = stock_data.iloc[-60:].copy()
-    
-    return stock_data
-
-def generate_signals(stock_data):
-    """
-    Generate buy/sell signals based on technical indicators.
-    
-    Args:
-        stock_data (pd.DataFrame): Stock data with calculated indicators (20-50 day SMA).
-    
-    Returns:
-        dict: A dictionary containing buy/sell signals and dates.
-    """
-    
-    # Buy Signal: if 20-day SMA > 50-day SMA, then buy 20% max buying power
-    stock_data['buy_signal'] = stock_data['20-day SMA'] > stock_data['50-day SMA']
-    buy_signal_dates = stock_data.index[stock_data['buy_signal']].tolist()
-    
-    if not buy_signal_dates:
-        buy_signal_dates = None #the python NoneType means nothing will plot on the frontend
-        most_recent_buy_signal_date = None
-    else:
-        buy_signal_dates = [date.strftime('%Y-%m-%d') for date in buy_signal_dates]
-        most_recent_buy_signal_date = stock_data[stock_data['buy_signal'] == True].index[-1]
-    
-    if stock_data['buy_signal'].iloc[-1] == True:
-        current_buy_signal = "Buy 20% max"
-        #AND + SEND A BUY NOTIFICATION ##
-        
-    else:
-        current_buy_signal = "WAIT"
-    
-    # Sell Signal: Current price > 1.1 * 20-day SMA
-    live_price = stock_data['Live_Price'].iloc[-1]
-    stock_data['sell_signal'] = False
-    most_recent_sell_signal_date = None
-    for i in range(1, len(stock_data)):
-        #generating historical sell signals based on closing prices)
-        if stock_data['Close'].iloc[i] > (1.1 * stock_data['20-day SMA'].iloc[i]):
-            if most_recent_sell_signal_date is None or (stock_data.index[i] - most_recent_sell_signal_date).days >= 3:
-                stock_data.loc[stock_data.index[i], 'sell_signal'] = True
-                most_recent_sell_signal_date = stock_data.index[i]
-    #grabbing sell signal dates to return
-    sell_signal_dates = stock_data.index[stock_data['sell_signal']].tolist()
-    if not sell_signal_dates:
-        sell_signal_dates = None
-        #most_recent_sell_signal_date = None
-    else:
-        sell_signal_dates = [date.strftime('%Y-%m-%d') for date in sell_signal_dates]
-        most_recent_sell_signal_date = stock_data[stock_data['sell_signal'] == True].index[-1]
-    
-    # Current signals
-    current_buy_signal = "Buy 20% max" if stock_data['buy_signal'].iloc[-1] else "WAIT"
-    if live_price > (1.1 * stock_data['20-day SMA'].iloc[-1]):
-        current_sell_signal = "Sell 50% max"
-        most_recent_sell_signal_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        #AND + SEND A SELL NOTIFICATION ##
-    else:
-        current_sell_signal = "WAIT"
-    
-    return {
-        "buy_signal_dates": buy_signal_dates,
-        "sell_signal_dates": sell_signal_dates,
-        "current_buy_signal": current_buy_signal,
-        "current_sell_signal": current_sell_signal,
-        "most_recent_buy_signal_date": most_recent_buy_signal_date,
-        "most_recent_sell_signal_date": most_recent_sell_signal_date
-    }
-    
-
-def prepare_frontend_data(stock_data, signals):
-    """
-    Prepare stock data and signals for the frontend.
-    
-    Args:
-        ticker (str): The stock ticker symbol.
-        stock_data (pd.DataFrame): Stock data with calculated indicators.
-        signals (dict): Buy/sell signals and dates.
-    
-    Returns:
-        dict: A dictionary containing data for the frontend.
-    """
-    # Extract the most recent 60 days of data for plotting
-    #stock_data = stock_data.iloc[-60:].copy()
-    data = {
-        "ticker": stock_data['Ticker'].iloc[-1],
-        "current_price": round(stock_data['Live_Price'].iloc[-1],2),
-        
-        #"current_price": round(stock_data['Close'].iloc[-1], 2),
-        "current_20_day_sma": round(stock_data['20-day SMA'].iloc[-1], 2),
-        "current_50_day_sma": round(stock_data['50-day SMA'].iloc[-1], 2),
-        "current_macd": round(stock_data['MACD'].iloc[-1],4),
-        "current_signal_line": round(stock_data['Signal_Line'].iloc[-1],4),
-        "current_histogram": round(stock_data['Histogram'].iloc[-1],4),
-        **signals, #dict of buy/sell signal_dates, current_signals, and most_recent_signal_dates
-        
-        "macd": stock_data['MACD'].values.tolist(),
-        "signal_line": stock_data['Signal_Line'].values.tolist(),
-        "histogram": stock_data['Histogram'].values.tolist(),
-        "dates": [date.strftime('%Y-%m-%d') for date in stock_data.index],
-        "closing_prices": stock_data['Close'].to_numpy().flatten().tolist(),
-        "20_day_smas": stock_data['20-day SMA'].values.tolist(),
-        "50_day_smas": stock_data['50-day SMA'].values.tolist(),
-        **signals,  # Include buy/sell signals and dates
-    }
-    print("Returning data:", data)
-    # Return the data 
-    return jsonify(data)
-
-
-
-
-
-
-
-
-
-
 
 
 @app.route('/get_stock_data', methods=['GET'])
@@ -279,8 +116,6 @@ def get_stock_data():
     #Section: Tracking the recent changes to price
     #YFinance API Call for 120 days
     stock_data = yf.download(ticker, period="120d", interval="1d")
-    stock_data['Ticker'] = ticker #add the ticker information to the dataframe
-    
     #Alpha Vantage API Call for 120 days
     #stock_data = fetch_stock_data_av_daily(ticker)
     if stock_data.empty:

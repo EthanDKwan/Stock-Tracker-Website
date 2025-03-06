@@ -27,9 +27,9 @@ Open your browser and navigate to http://localhost:5000.
 
 Usage
 
-Enter a stock ticker (e.g., AAPL) to view historical data and buy/sell signals.
+-Enter a stock ticker (e.g., AAPL) to view historical data and buy/sell signals.
 
-Real-time updates and notifications are available in the live version.
+-Real-time updates and notifications are available in the live version.
 
 ## License
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
@@ -52,6 +52,7 @@ Note: This goal is a challenge even for multi-trillion-dollar financial industri
 
 Author:
 Ethan D. Kwan
+
 Author's Note:
 This project was conceived and developed starting February 2nd, 2025, as a platform to practice trading knowledge and software development skills.
 
