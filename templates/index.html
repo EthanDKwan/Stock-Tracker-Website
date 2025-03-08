@@ -117,8 +117,8 @@
     <!-- Form to input the ticker -->
     <form id="ticker-form">
         <label for="ticker">Enter Ticker:</label>
-        <input type="text" id="ticker" name="ticker" required>
-        <button type="submit">Submit</button>
+        <input type="text" id="ticker" name="ticker" required aria-label="Enter stock ticker symbol">
+        <button type="submit" aria-label="Submit ticker symbol">Submit</button>
     </form>
 
     <!-- Placeholder for the current stock price -->
@@ -151,7 +151,12 @@
  
 <script>
     // Function to handle the form submission and fetch stock data
-    $('#ticker-form').submit(function(event) {
+    	$(document).ready(function() {
+    	// Fetch data for the default ticker on page load
+   	 $('#ticker').val('SPY');  // Set default ticker in the input field
+   	 $('#ticker-form').submit();  // Trigger form submission
+	});
+	$('#ticker-form').submit(function(event) {
         event.preventDefault();
         var ticker = $('#ticker').val();
 

@@ -22,6 +22,7 @@ def index():
 cached_price = None
 cached_time = None
 CACHE_EXPIRY_TIME = timedelta(minutes=5)
+DEFAULT_TICKER = 'SPY'
 
 """ #COMMENTING OUT AlphaVantageAPI historical data fetch
 def fetch_stock_data_av_live(ticker):
@@ -100,7 +101,7 @@ def fetch_stock_data(ticker= "SPY", period="120d", interval="1d"):
     
     #ticker = yf.Ticker(ticker)
     #live_price = ticker.info['regularMarketPrice']
-    live_price = yf.Ticker(ticker).info('regularMarketPrice')
+    live_price = yf.Ticker(ticker).info['regularMarketPrice']
     stock_data['Live_Price'] = live_price
     return stock_data
     
@@ -133,59 +134,76 @@ def calculate_indicators(stock_data):
     return stock_data
 
 def generate_signals(stock_data):
-    """
-    Generate buy/sell signals based on technical indicators.
+    #print("Inside generate_signals")  # Debugging: Log entry
     
-    Args:
-        stock_data (pd.DataFrame): Stock data with calculated indicators (20-50 day SMA).
+    # Check if stock_data is empty
+    if stock_data.empty:
+        raise ValueError("Stock data is empty. Cannot generate signals.")
     
-    Returns:
-        dict: A dictionary containing buy/sell signals and dates.
-    """
+    # Check the length of stock_data
+    #print("Length of stock_data:", len(stock_data))
+    if len(stock_data) < 2:
+        raise ValueError("Not enough data to generate signals. At least 2 rows are required.")
     
     # Buy Signal: if 20-day SMA > 50-day SMA, then buy 20% max buying power
     stock_data['buy_signal'] = stock_data['20-day SMA'] > stock_data['50-day SMA']
-    buy_signal_dates = stock_data.index[stock_data['buy_signal']].tolist()
+    #print("Buy signal series:", stock_data['buy_signal'])  # Debugging: Log buy signal series
+    #print("Last buy signal value:", stock_data['buy_signal'].iloc[-1])  # Debugging: Log last value
     
-    if not buy_signal_dates:
-        buy_signal_dates = None #the python NoneType means nothing will plot on the frontend
+    buy_signal_dates = stock_data.index[stock_data['buy_signal']].tolist()
+    #print("Buy signal dates:", buy_signal_dates)  # Debugging: Log buy signal dates
+    #print("Type of buy_signal_dates:", type(buy_signal_dates))  # Debugging: Log the type
+    
+    if buy_signal_dates is None or len(buy_signal_dates) == 0:  # Fixed: Explicit check for None or empty list
+        buy_signal_dates = None
         most_recent_buy_signal_date = None
     else:
         buy_signal_dates = [date.strftime('%Y-%m-%d') for date in buy_signal_dates]
-        most_recent_buy_signal_date = stock_data[stock_data['buy_signal'] == True].index[-1]
+        most_recent_buy_signal_date = stock_data[stock_data['buy_signal']].index[-1]
     
-    if stock_data['buy_signal'].iloc[-1] == True:
+    # Check the last buy signal value
+    if stock_data['buy_signal'].iloc[-1].item() == True:  # Fixed: Use .item() to extract scalar value
         current_buy_signal = "Buy 20% max"
-        #AND + SEND A BUY NOTIFICATION ##
-        
     else:
         current_buy_signal = "WAIT"
     
     # Sell Signal: Current price > 1.1 * 20-day SMA
-    live_price = stock_data['Live_Price'].iloc[-1]
+    live_price = stock_data['Live_Price'].iloc[-1].item()  # Fixed: Use .item() to extract scalar value
+    #print("Live price:", live_price)  # Debugging: Log live price
+    #print("20-day SMA:", stock_data['20-day SMA'].iloc[-1].item())  # Debugging: Log 20-day SMA
+    
     stock_data['sell_signal'] = False
     most_recent_sell_signal_date = None
     for i in range(1, len(stock_data)):
-        #generating historical sell signals based on closing prices)
-        if stock_data['Close'].iloc[i] > (1.1 * stock_data['20-day SMA'].iloc[i]):
+        # Generating historical sell signals based on closing prices
+        closing_price = stock_data['Close'].iloc[i].item()
+        sma_20_day = stock_data['20-day SMA'].iloc[i]
+        #print("20-day sma", sma_20_day)
+        #print("20-day sma type: ", type(sma_20_day))
+        comparison_value = 1.1 * sma_20_day
+        
+        #print(f"Row {i}: Closing Price = {closing_price}, 1.1 * 20-day SMA = {comparison_value}")
+        #print("Closing type:", type(closing_price))  # Debugging: Log type
+        #print("1.1 * 20-day SMA type:", type(comparison_value))  # Debugging: Log type
+        
+        if closing_price > comparison_value:
             if most_recent_sell_signal_date is None or (stock_data.index[i] - most_recent_sell_signal_date).days >= 3:
                 stock_data.loc[stock_data.index[i], 'sell_signal'] = True
                 most_recent_sell_signal_date = stock_data.index[i]
-    #grabbing sell signal dates to return
+    
+    # Grabbing sell signal dates to return
     sell_signal_dates = stock_data.index[stock_data['sell_signal']].tolist()
     if not sell_signal_dates:
         sell_signal_dates = None
-        #most_recent_sell_signal_date = None
     else:
         sell_signal_dates = [date.strftime('%Y-%m-%d') for date in sell_signal_dates]
         most_recent_sell_signal_date = stock_data[stock_data['sell_signal'] == True].index[-1]
     
     # Current signals
-    current_buy_signal = "Buy 20% max" if stock_data['buy_signal'].iloc[-1] else "WAIT"
-    if live_price > (1.1 * stock_data['20-day SMA'].iloc[-1]):
+    current_buy_signal = "Buy 20% max" if stock_data['buy_signal'].iloc[-1].item() else "WAIT"  # Fixed: Use .item()
+    if live_price > (1.1 * stock_data['20-day SMA'].iloc[-1].item()):  # Fixed: Use .item()
         current_sell_signal = "Sell 50% max"
         most_recent_sell_signal_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        #AND + SEND A SELL NOTIFICATION ##
     else:
         current_sell_signal = "WAIT"
     
@@ -212,7 +230,7 @@ def prepare_frontend_data(stock_data, signals):
         dict: A dictionary containing data for the frontend.
     """
     # Extract the most recent 60 days of data for plotting
-    #stock_data = stock_data.iloc[-60:].copy()
+    stock_data = stock_data.iloc[-60:].copy()
     data = {
         "ticker": stock_data['Ticker'].iloc[-1],
         "current_price": round(stock_data['Live_Price'].iloc[-1],2),
@@ -223,7 +241,6 @@ def prepare_frontend_data(stock_data, signals):
         "current_macd": round(stock_data['MACD'].iloc[-1],4),
         "current_signal_line": round(stock_data['Signal_Line'].iloc[-1],4),
         "current_histogram": round(stock_data['Histogram'].iloc[-1],4),
-        **signals, #dict of buy/sell signal_dates, current_signals, and most_recent_signal_dates
         
         "macd": stock_data['MACD'].values.tolist(),
         "signal_line": stock_data['Signal_Line'].values.tolist(),
@@ -232,190 +249,31 @@ def prepare_frontend_data(stock_data, signals):
         "closing_prices": stock_data['Close'].to_numpy().flatten().tolist(),
         "20_day_smas": stock_data['20-day SMA'].values.tolist(),
         "50_day_smas": stock_data['50-day SMA'].values.tolist(),
-        **signals,  # Include buy/sell signals and dates
+        **signals  # Include buy/sell signals and dates
     }
     print("Returning data:", data)
     # Return the data 
-    return jsonify(data)
-
-
-
-
-
-
-
-
-
-
+    return data
 
 
 @app.route('/get_stock_data', methods=['GET'])
 def get_stock_data():
-    # Fetch current price data using yfinance
-    ticker = request.args.get('ticker')  # Get 'ticker' from query params
-    
-    global cached_price, cached_time
-    if cached_price is not None and cached_time is not None:
-        # If the cache is still valid (i.e., not expired)
-        if datetime.now() - cached_time < CACHE_EXPIRY_TIME:
-            print("Returning cached price")
-            current_time= cached_time.strftime("%Y-%m-%d %H:%M:%S")
-            current_price = cached_price
-    else:
-        stock_data = yf.download(ticker, period="1d", interval="1m")
-        current_time_detailed = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        current_time = datetime.now().strftime("%Y-%m-%d")
-        current_price = float(stock_data['Close'].iloc[-1]) 
-        
-    
-    #Alpha Vantage API Call
-    #livetime,current_price = fetch_stock_data_av_live(ticker)
-    if current_price is None:
-        return jsonify({'error': 'Ticker is required'}), 400
-    # Get the current stock price
-    #current_price = float(stock_data['Close'].iloc[-1])
-    
-
-    #Section: Tracking the recent changes to price
-    #YFinance API Call for 120 days
-    stock_data = yf.download(ticker, period="120d", interval="1d")
-    stock_data['Ticker'] = ticker #add the ticker information to the dataframe
-    
-    #Alpha Vantage API Call for 120 days
-    #stock_data = fetch_stock_data_av_daily(ticker)
-    if stock_data.empty:
-        return jsonify({'error': 'Ticker is required'}), 400
-    # Get the current stock price
-    current_price = float(stock_data['Close'].iloc[-1])
-
-    stock_data['10-day SMA'] = stock_data['Close'].rolling(window=10).mean()
-    stock_data['20-day SMA'] = stock_data['Close'].rolling(window=20).mean()
-    stock_data['50-day SMA'] = stock_data['Close'].rolling(window=50).mean()
-    
-    #STRATEGY 2: MACD to indicate bull/bear trends
-    # Calculate the 12-day and 26-day exponential moving averages
-    stock_data['12-day EMA'] = stock_data['Close'].ewm(span=12, adjust=False).mean()
-    stock_data['26-day EMA'] = stock_data['Close'].ewm(span=26, adjust=False).mean()
-    # Calculate the MACD (difference between the 12-day and 26-day EMAs)
-    stock_data['MACD'] = stock_data['12-day EMA'] - stock_data['26-day EMA']
-    # Calculate the Signal Line (9-day EMA of the MACD)
-    stock_data['Signal_Line'] = stock_data['MACD'].ewm(span=9, adjust=False).mean()
-    # Calculate the Histogram (difference between the MACD and the Signal Line)
-    stock_data['Histogram'] = stock_data['MACD'] - stock_data['Signal_Line']
-    # Get the current MACD, Signal Line, and Histogram
-    current_macd = stock_data['MACD'].iloc[-1]
-    current_signal_line = stock_data['Signal_Line'].iloc[-1]
-    current_histogram = stock_data['Histogram'].iloc[-1]
-    
-    
-    #To remove nans from the 20-day and 50-day sma, grab only the most recent 60 days
-    stock_data2 = stock_data.iloc[-60:].copy()
-    #print("stock data 2, removing 60 earliest datapoints: ", stock_data2[['Close','20-day SMA','50-day SMA']])
-    #print(len(stock_data2))
-    current_20_day_sma = float(stock_data2['20-day SMA'].iloc[-1])
-    current_50_day_sma = float(stock_data2['50-day SMA'].iloc[-1])
-    
-    #Fixing close data
-    stock_data2['Fixed-Close'] = stock_data2['Close'].to_numpy().flatten().tolist()
-    #print("stock data2 with close fix?: ", stock_data2[['Close','Fixed-Close', '20-day SMA']])
-    
-    #BUY STRATEGY 1
-    #20-day sma > 50-day SMA
-    # Add the 'buy_signal' column by comparing '20-day SMA' and '50-day SMA'
-    stock_data2['buy_signal'] = stock_data2['20-day SMA'] > stock_data2['50-day SMA']
-    #Buy Signal Dates
-    buy_signal_dates = stock_data2.index[stock_data2['buy_signal']].tolist()
-    if not buy_signal_dates:
-        buy_signal_dates = None #the python NoneType means nothing will plot on the frontend
-        most_recent_buy_signal_date = None
-    else:
-        buy_signal_dates = [date.strftime('%Y-%m-%d') for date in buy_signal_dates]
-        most_recent_buy_signal_date = stock_data2[stock_data2['buy_signal'] == True].index[-1]
-    current_buy_signal = "BUY 20% max" if stock_data2['buy_signal'].iloc[-1] else "WAIT"
-    if stock_data2['buy_signal'].iloc[-1] == True:
-        current_buy_signal = "Buy 20% max"
-        
-        #AND + SEND A BUY NOTIFICATION ##
-        
-    else:
-        current_buy_signal = "WAIT"
-        
-    #print("stock data 2 with close and buy signals: ", stock_data2[['Close','buy_signal']])
-    #print("buy signal dates : ", buy_signal_dates)
-    
-    
-    #Sell Strategy 1a  
-    #Sell 50% of current positions when Current price >1.1*20day SMA && number of days since last sell order >=3days
-    stock_data2['sell_signal'] = False
-    most_recent_sell_signal_date = None
-    # Loop through each row to calculate the sell signal
-    for i in range(1, len(stock_data2)):
-        # Check if the current day's closing price is greater than 1.1 times the 20-day SMA
-        if stock_data2['Fixed-Close'].iloc[i] > (1.1 * stock_data2['20-day SMA'].iloc[i]):
-            # If the number of days since the last sell signal is greater than or equal to 3
-            if most_recent_sell_signal_date is None or (stock_data2.index[i] - most_recent_sell_signal_date).days >= 3:
-                stock_data2.loc[stock_data2.index[i], 'sell_signal'] = True
-                most_recent_sell_signal_date = stock_data2.index[i]
-    #Sell Signal Dates
-    sell_signal_dates = stock_data2.index[stock_data2['sell_signal']].tolist()
-    if not sell_signal_dates:
-        sell_signal_dates = None
-        most_recent_sell_signal_date = None
-    else:
-        sell_signal_dates = [date.strftime('%Y-%m-%d') for date in sell_signal_dates]
-        most_recent_sell_signal_date = stock_data2[stock_data2['sell_signal'] == True].index[-1]
-    current_sell_signal = "sell 50% max" if stock_data2['sell_signal'].iloc[-1] else "WAIT"
-    
-    #Sell Strategy 1b (Same strategy, but with pseudo-real time price data)
-    live_sell_signal = False
-    most_recent_live_sell_signal_date = None
-    if current_price > (1.1 *stock_data2['20-day SMA'].iloc[-1]):
-        if most_recent_sell_signal_date is None or (most_recent_sell_signal_date - current_time) >=3:
-            live_sell_signal = True
-            most_recent_live_sell_signal_date = current_time_detailed
-            # notification triggers
-    
-        
-
-    
-    
-    print("stock data2 with close fix?: ", stock_data2[['Close','Fixed-Close', '20-day SMA', 'buy_signal','sell_signal']])
-    print("buy signal dates : ", buy_signal_dates)
-    print("sell signal dates : ", sell_signal_dates)
-    
-    
-    # Create a dictionary with the data to return
-    data = {
-        #Current price data
-        "ticker": ticker,
-        "current_price": round(current_price,2),
-        "current_20_day_sma": round(current_20_day_sma,2),
-        "current_50_day_sma": round(current_50_day_sma,2),
-        "most_recent_buy_signal_date": most_recent_buy_signal_date,  # Format date
-        "most_recent_sell_signal_date": most_recent_sell_signal_date,  # Format date
-        'current_buy_signal': current_buy_signal,
-        'current_sell_signal': current_sell_signal,
-        'current_macd': round(current_macd,4),
-        'current_signal_line': round(current_signal_line,4),
-        'current_histogram': round(current_histogram,4),
-        'live_sell_signal': live_sell_signal,
-        'most_recent_live_sell_signal_date': most_recent_live_sell_signal_date,
-        
-        #60-day for plotting in frontend, returned as lists via jsonify data
-        #"dates": stock_data2.index.strftime('%Y-%m-%d').tolist(),
-        "closing_prices": stock_data2['Close'].to_numpy().flatten().tolist(),
-        "20_day_smas": stock_data2['20-day SMA'].values.tolist(),
-        "50_day_smas": stock_data2['50-day SMA'].values.tolist(),
-        "histogram": stock_data2['Histogram'].values.tolist(),
-        "signal_line": stock_data2['Signal_Line'].values.tolist(),
-        "macd": stock_data2['MACD'].values.tolist(),
-        "dates": [date.strftime('%Y-%m-%d') for date in stock_data2.index],
-        "buy_signal_dates": buy_signal_dates,
-        "sell_signal_dates": sell_signal_dates
-    }
-    print("Returning data:", data)
-    # Return the data 
-    return jsonify(data)
+    """ Handle on-demand requests for stock data (Goals 3+4)"""
+    ticker = request.args.get('ticker', DEFAULT_TICKER) # Get ticker from frontend query
+    try:
+        stock_data = fetch_stock_data(ticker)
+        stock_data = calculate_indicators(stock_data)
+        #print("Fetched stock data + indicators:", stock_data.head())
+        signals = generate_signals(stock_data)
+        #print("Calculated signals (type):", type(signals))
+        print ("Generated signals: ", signals)
+        frontend_data = prepare_frontend_data(stock_data, signals)
+        #print("Frontend data (type): ", type(frontend_data))
+        #print("Frontend data: ", frontend_data)
+        return jsonify(frontend_data)
+    except Exception as e:
+        print(f"Error processing ticker {ticker}: {e}")
+        return jsonify ({'error': str(e)}), 400
 
 
 # Run the app
