@@ -8,14 +8,10 @@ import yfinance as yf
 import pandas as pd
 
 from flask import Flask, render_template, request, jsonify
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 import requests
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-import pytz
-import atexit
-import logging
 
 app = Flask(__name__)
 
@@ -31,15 +27,6 @@ cached_time = None
 CACHE_EXPIRY_TIME = timedelta(minutes=5)
 CURRENTLY_TRADED_TICKER = "TQQQ"
 DEFAULT_TICKER = "SPY"
-
-MARKET_OPEN = time(9,30) #9:30 AM
-MARKET_CLOSE = time(16,0) #4:00 PM
-interval = 15 #minutes interval for auto-monitor job
-
-# Define valid buy and sell signals (adjust as necessary in future)
-VALID_BUY_SIGNALS = ["Buy 20% max", "Buy 10% max"]  # Add more as needed
-VALID_SELL_SIGNALS = ["Sell 50% max"]
-
 
 """ #COMMENTING OUT AlphaVantageAPI historical data fetch
 def fetch_stock_data_av_live(ticker):
@@ -95,79 +82,26 @@ def fetch_stock_data_av_daily(ticker):
     return df.tail(120)  # Return the most recent 120 days
 """
 
-
 def monitor_hard_coded_ticker():
-    logging.info(f"Monitoring {CURRENTLY_TRADED_TICKER} at {datetime.now()}")
+    print(f"Monitoring {CURRENTLY_TRADED_TICKER} at {datetime.now()}")
     try:
-        # Step 1: Fetch stock data
         stock_data = fetch_stock_data(CURRENTLY_TRADED_TICKER)
-
-        # Step 2: Calculate indicators
         stock_data = calculate_indicators(stock_data)
-
-        # Step 3: Generate signals
         signals = generate_signals(stock_data)
-
-        # Step 4: Check for buy signals
-        current_buy_signal = signals.get("current_buy_signal")
-        if current_buy_signal != "WAIT":
-            if current_buy_signal in VALID_BUY_SIGNALS:
-                logging.info(f"BUY signal triggered for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
-                #send_notification(f"BUY signal for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
-            else:
-                logging.error(f"Unexpected buy signal for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
-
-        # Step 5: Check for sell signals
-        current_sell_signal = signals.get("current_sell_signal")
-        if current_sell_signal != "WAIT":
-            if current_sell_signal in VALID_SELL_SIGNALS:
-                logging.info(f"SELL signal triggered for {CURRENTLY_TRADED_TICKER}: {current_sell_signal}")
-                #send_notification(f"SELL signal for {CURRENTLY_TRADED_TICKER}: {current_sell_signal}")
-            else:
-                logging.error(f"Unexpected sell signal for {CURRENTLY_TRADED_TICKER}: {current_sell_signal}")
-
-    except yf.YFinanceError as e:
-        logging.error(f"Failed to fetch data for {CURRENTLY_TRADED_TICKER}: {e}")
-    except KeyError as e:
-        logging.error(f"Missing expected key in data: {e}")
-    except ValueError as e:
-        logging.error(f"Error in indicator calculation: {e}")
+        
+        if signals["current_buy_signal"] == "Buy 20% max":
+            print("BUY signal triggered!")
+            # send_notification(f"BUY signal for {HARD_CODED_TICKER}: Buy 20% max")
+        if signals["current_sell_signal"] == "Sell 50% max":
+            print("SELL signal triggered!")
+            # send_notification(f"SELL signal for {HARD_CODED_TICKER}: Sell 50% max")
     except Exception as e:
-        logging.error(f"Unexpected error monitoring {CURRENTLY_TRADED_TICKER}: {e}")
+        print(f"Error monitoring {CURRENTLY_TRADED_TICKER}: {e}")
 
-def is_market_open():
-    now = datetime.now(pytz.timezone('America/New_York')).time()
-    return MARKET_OPEN <=now <=MARKET_CLOSE
-
-def monitored_job():
-    if not is_market_open():
-        logging.info("Market is closed. Skipping this run.")
-        return
-    logging.info("Market is open. Running auto-monitor at {datetime.now()} ")
-    monitor_hard_coded_ticker()
-
-
-# Configure Scheduler logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 # Initialize the scheduler
-scheduler = BackgroundScheduler(timezone=pytz.timezone('America/New_York'))
-scheduler.add_job(
-    func=monitored_job,
-    trigger=CronTrigger(
-        day_of_week='mon-fri',  # Monday to Friday
-        hour='9-16',            # 9 AM to 3 PM (inclusive)
-        minute=f'*/{interval}',             # Start at the top of the hour
-        timezone='America/New_York'),
-    max_instances=1,  # Prevent overlapping jobs
-    id = 'cron_run')
-
-# Start the scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=monitor_hard_coded_ticker, trigger="interval", hours=1)  # Run every hour
 scheduler.start()
-logging.info("Scheduler started. Monitoring every {interval} minutes between 9:30AM -4:00 PM, Mon-Fri.")
-# Shut down the scheduler
-atexit.register(lambda: scheduler.shutdown())
-logging.info("Scheduler shutdown handler registered.")
-logging.info(f"Scheduler is running: {scheduler.running}")
     
 
 
