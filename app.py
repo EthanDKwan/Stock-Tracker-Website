@@ -17,6 +17,12 @@ import pytz
 import atexit
 import logging
 
+from dotenv import load_dotenv
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 app = Flask(__name__)
 
 # Define your route for the homepage
@@ -35,6 +41,10 @@ DEFAULT_TICKER = "SPY"
 MARKET_OPEN = time(9,30) #9:30 AM
 MARKET_CLOSE = time(16,0) #4:00 PM
 interval = 15 #minutes interval for auto-monitor job
+
+load_dotenv()
+#email_from = os.getenv('STOCK_TRACKER_EMAIL_FROM')
+#email_password = os.getenv('STOCK_TRACKER_EMAIL_PASSWORD')
 
 # Define valid buy and sell signals (adjust as necessary in future)
 VALID_BUY_SIGNALS = ["Buy 20% max", "Buy 10% max"]  # Add more as needed
@@ -113,7 +123,26 @@ def monitor_hard_coded_ticker():
         if current_buy_signal != "WAIT":
             if current_buy_signal in VALID_BUY_SIGNALS:
                 logging.info(f"BUY signal triggered for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
-                #send_notification(f"BUY signal for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
+                
+                
+                most_recent_row = stock_data.iloc[-1]
+                ticker = most_recent_row['Ticker']
+                price = most_recent_row['Price']
+                sma_20 = most_recent_row['20-day SMA']
+                sma_50 = most_recent_row['50-day SMA']
+                
+                # Customize the email subject and body
+                subject = f"Stock Tracker Website: A {current_buy_signal} Signal for {CURRENTLY_TRADED_TICKER}"
+                body = (
+                f"A BUY signal has been detected for {ticker}.\n\n"
+                f"Recommendation: {current_buy_signal}\n"
+                f"20-Day SMA (${sma_20:.2f}) > 50-Day SMA (${sma_50:.2f})\n"
+                f"Current Price: ${price:.2f}\n"
+                f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"Please review accordingly."
+                )
+                
+                send_notification(subject = subject, body = body, to_emial = "edkwan1@gmail.com")
             else:
                 logging.error(f"Unexpected buy signal for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
 
@@ -122,7 +151,23 @@ def monitor_hard_coded_ticker():
         if current_sell_signal != "WAIT":
             if current_sell_signal in VALID_SELL_SIGNALS:
                 logging.info(f"SELL signal triggered for {CURRENTLY_TRADED_TICKER}: {current_sell_signal}")
-                #send_notification(f"SELL signal for {CURRENTLY_TRADED_TICKER}: {current_sell_signal}")
+                
+                most_recent_row = stock_data.iloc[-1]
+                ticker = most_recent_row['Ticker']
+                price = most_recent_row['Price']
+                sma_20 = most_recent_row['20-day SMA']
+                
+                # Customize the email subject and body
+                subject = f"Stock Tracker Website: A {current_sell_signal} Signal for {CURRENTLY_TRADED_TICKER}"
+                body = (
+                f"A SELL signal has been detected for {ticker}.\n\n"
+                f"Recommendation: {current_sell_signal}\n"
+                f"Current Price (${price:.2f}) > 110% x 20-Day SMA (${sma_20:.2f})\n"
+                f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                f"Please review accordingly."
+                )
+                
+                send_notification(subject = subject, body = body, to_email = "edkwan1@gmail.com")
             else:
                 logging.error(f"Unexpected sell signal for {CURRENTLY_TRADED_TICKER}: {current_sell_signal}")
 
@@ -170,8 +215,43 @@ logging.info("Scheduler shutdown handler registered.")
 logging.info(f"Scheduler is running: {scheduler.running}")
     
 
+def send_notification(subject, body, to_email):
+    """
+    Sends an email notification using Gmail SMTP.
 
-#Adding in modular helper functions:
+    Args:
+        subject (str): The subject of the email.
+        body (str): The body of the email.
+        to_email (str): The recipient's email address.
+    """
+    try:
+        email_from = os.getenv('STOCK_TRACKER_EMAIL_FROM')
+        email_password = os.getenv('STOCK_TRACKER_EMAIL_PASSWORD')
+        # Validate environment variables
+        if not email_from or not email_password:
+            logging.error("Email credentials are not set in environment variables.")
+            return
+        # Create the email
+        msg = MIMEMultipart()
+        msg['From'] = "Stock Tracker Website <{}>".format(email_from)
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+        # Send the email
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(email_from, email_password)
+            server.sendmail(email_from, to_email, msg.as_string())
+        logging.info(f"Email sent to {to_email}: {subject}")
+    except smtplib.SMTPAuthenticationError:
+        logging.error("Failed to authenticate. Check your email credentials.")
+    except smtplib.SMTPException as e:
+        logging.error(f"SMTP error occurred: {e}")
+    except Exception as e:
+        logging.error(f"Failed to send email to {to_email}: {e}")
+
+
+#Modular helper functions:
 def fetch_stock_data(ticker= "SPY", period="120d", interval="1d"):
     """
     Fetch stock data for a given ticker using yfinance.
