@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Tracker - Explore</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #00bcd4, #8e44ad);
+            color: #333; /* Dark gray text */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+            text-align: center;
+        }
+
+        #ticker-form {
+            background-color: #ffffff; /* White background */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #ticker-form input {
+            padding: 10px;
+            font-size: 18px;
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0; /* Light gray border */
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        #ticker-form button {
+            padding: 10px;
+            font-size: 18px;
+            background-color: #00bcd4; /* Cyan button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #ticker-form button:hover {
+            background-color: #0097a7; /* Darker cyan on hover */
+        }
+
+        #stock-containers {
+            width: calc(100% - 100px); /* Full width minus 50px on each side */
+            max-width: none;
+            margin: 0 auto;
+        }
+
+        .stock-container {
+            background-color: #ffffff; /* White background */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stock-info {
+            flex: 1;
+            max-width: 400px;
+            background-color: #f0f0f0; /* Soft gray background */
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0; /* Light gray border */
+        }
+
+        .stock-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #333; /* Dark gray text */
+        }
+
+        .stock-info p {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #333; /* Dark gray text */
+        }
+
+        .stock-info span {
+            font-weight: bold;
+            font-size: 20px;
+            color: #333; /* Dark gray text */
+        }
+
+        .stock-info button {
+            padding: 10px;
+            font-size: 18px;
+            background-color: #8e44ad; /* Purple button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .stock-info button:hover {
+            background-color: #6a1b9a; /* Darker purple on hover */
+        }
+
+        .stock-charts {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stock-chart, .macd-chart {
+            width: 95%;
+            height: 350px;
+            background-color: #2c3e50; /* Dark blue-gray background */
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #34495e; /* Slightly lighter border */
+        }
+
+        /* Adjust Plotly chart styles */
+        .g-title {
+            fill: #ffffff !important; /* White title text */
+            font-size: 16px !important;
+        }
+
+        .xtitle, .ytitle {
+            fill: #ffffff !important; /* White axis titles */
+        }
+
+        .xaxis, .yaxis {
+            color: #95a5a6 !important; /* Light gray axis labels */
+        }
+
+        .gridpath {
+            stroke: #95a5a6 !important; /* Light gray grid lines */
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Tracker - Explore</h1>
+    <!-- Form to input the ticker -->
+    <form id="ticker-form">
+        <label for="ticker">Enter Ticker:</label>
+        <input type="text" id="ticker" name="ticker" required aria-label="Enter stock ticker symbol">
+        <button type="button" id="add-stock" aria-label="Add stock">Add Stock</button>
+    </form>
+
+    <!-- Container for dynamic stock containers -->
+    <div id="stock-containers"></div>
+
+    <script>
+        // Function to handle the form submission and fetch stock data
+        $(document).ready(function() {
+            // Fetch data for the default ticker on page load
+            $('#ticker').val('SPY');  // Set default ticker in the input field
+            $('#add-stock').click();  // Trigger "Add Stock" button click
+        });
+
+        $('#add-stock').click(function() {
+            var ticker = $('#ticker').val().toUpperCase();
+
+            // Make an AJAX request to the Flask backend
+            $.getJSON('/get_stock_data', { ticker: ticker }, function(data) {
+                console.log("Data received from backend:", data); // Debugging: Log the received data
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    // Create a new stock container
+                    var stockContainer = `
+                        <div class="stock-container" id="container-${ticker}">
+                            <!-- Stock Info -->
+                            <div class="stock-info">
+                                <h2>${ticker}</h2>
+                                <p>Current Price: <span>${data.current_price}</span></p>
+                                <p>20-day SMA: <span>${data.current_20_day_sma}</span></p>
+                                <p>50-day SMA: <span>${data.current_50_day_sma}</span></p>
+                                <p>MACD: <span>${data.current_macd}</span></p>
+                                <p>Signal Line: <span>${data.current_signal_line}</span></p>
+                                <p>Histogram: <span>${data.current_histogram}</span></p>
+                                <p>Buy Signal: <span>${data.current_buy_signal}</span></p>
+                                <p>Sell Signal: <span>${data.current_sell_signal}</span></p>
+                                <button onclick="removeStock('${ticker}')">Remove</button>
+                            </div>
+
+                            <!-- Stock Charts -->
+                            <div class="stock-charts">
+                                <div id="stock-chart-${ticker}" class="stock-chart"></div>
+                                <div id="macd-chart-${ticker}" class="macd-chart"></div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Append the new stock container to the container
+                    $('#stock-containers').append(stockContainer);
+
+                    // Render the charts for this stock
+                    renderCharts(ticker, data);
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX request failed:", textStatus, errorThrown); // Debugging: Log AJAX errors
+                alert('Error retrieving stock data.');
+            });
+        });
+
+        // Function to render charts for a given stock
+        function renderCharts(ticker, data) {
+            // Prepare data for Plotly
+            var trace1 = {
+                x: data.dates,
+                y: data.closing_prices,
+                mode: 'lines+markers',
+                name: 'Closing Price',
+                line: { color: '#00bcd4' }
+            };
+            var trace2 = {
+                x: data.dates,
+                y: data['20_day_smas'],
+                mode: 'lines+markers',
+                name: '20-day SMA',
+                line: { color: '#16a085' }
+            };
+            var trace3 = {
+                x: data.dates,
+                y: data['50_day_smas'],
+                mode: 'lines+markers',
+                name: '50-day SMA',
+                line: { color: '#00796b' }
+            };
+            var trace4 = {
+		x: data.dates,
+                y: data.histogram,
+                mode: 'lines+markers',
+                name: 'Histogram',
+                line: { color: '#00bcd4' } 
+            };
+            var trace5 = {
+                x: data.dates,
+                y: data.macd,
+                mode: 'lines+markers',
+                name: 'MACD',
+                line: { color: '#16a085' }
+            };
+            var trace6 = {
+                x: data.dates,
+                y: data.signal_line,
+                mode: 'lines+markers',
+                name: 'Signal Line',
+                line: { color: '#00796b' }
+            };
+
+            // Create data arrays for each plot
+            var plotData1 = [trace1, trace2, trace3];
+            var plotData2 = [trace4, trace5, trace6];
+
+            // Add buy/sell signals if they exist
+            if (data.buy_signal_dates && data.buy_signal_dates.length > 0) {
+                var buySignalYValues1 = data.buy_signal_dates.map(function(date) {
+                    var index = data.dates.indexOf(date);
+                    return data.closing_prices[index];
+                });
+
+                var buySignalYValues2 = data.buy_signal_dates.map(function(date) {
+                    var index = data.dates.indexOf(date);
+                    return data.histogram[index];
+                });
+
+                var traceBuySignal1 = {
+                    x: data.buy_signal_dates,
+                    y: buySignalYValues1,
+                    mode: 'markers',
+                    name: 'Buy Signal',
+                    marker: { symbol: 'cross', size: 8, color: '#2ecc71' } // Green markers
+                };
+
+                var traceBuySignal2 = {
+                    x: data.buy_signal_dates,
+                    y: buySignalYValues2,
+                    mode: 'markers',
+                    name: 'Buy Signal',
+                    marker: { symbol: 'cross', size: 8, color: '#2ecc71' } // Green markers
+                };
+
+                plotData1.push(traceBuySignal1);
+                plotData2.push(traceBuySignal2);
+            }
+
+            if (data.sell_signal_dates && data.sell_signal_dates.length > 0) {
+                var sellSignalYValues1 = data.sell_signal_dates.map(function(date) {
+                    var index = data.dates.indexOf(date);
+                    return data.closing_prices[index];
+                });
+
+                var sellSignalYValues2 = data.sell_signal_dates.map(function(date) {
+                    var index = data.dates.indexOf(date);
+                    return data.histogram[index];
+                });
+
+                var traceSellSignal1 = {
+                    x: data.sell_signal_dates,
+                    y: sellSignalYValues1,
+                    mode: 'markers',
+                    name: 'Sell Signal',
+                    marker: { symbol: 'x', size: 8, color: '#e74c3c' } // Red markers
+                };
+
+                var traceSellSignal2 = {
+                    x: data.sell_signal_dates,
+                    y: sellSignalYValues2,
+                    mode: 'markers',
+                    name: 'Sell Signal',
+                    marker: { symbol: 'x', size: 8, color: '#e74c3c' } // Red markers
+                };
+
+                plotData1.push(traceSellSignal1);
+                plotData2.push(traceSellSignal2);
+            }
+
+            // Define layouts for each plot
+            var layout1 = {
+                title: {
+                    text: ticker + ' Price and SMAs',
+                    font: { size: 16, color: '#ffffff' }, // White title text
+                    y: 0.95
+                },
+                margin: { t: 30, b: 40, l: 50, r: 20 },
+                yaxis: { title: 'Price (USD)', color: '#95a5a6' }, // Light gray axis labels
+                plot_bgcolor: '#2c3e50', // Dark background
+                paper_bgcolor: '#2c3e50', // Dark background
+                font: { color: '#ffffff' } // White text
+            };
+
+            var layout2 = {
+                title: {
+                    text: ticker + ' Indicators',
+                    font: { size: 16, color: '#ffffff' }, // White title text
+                    y: 0.95
+                },
+                margin: { t: 30, b: 40, l: 50, r: 20 },
+                yaxis: { title: 'Value', color: '#95a5a6' }, // Light gray axis labels
+                plot_bgcolor: '#2c3e50', // Dark background
+                paper_bgcolor: '#2c3e50', // Dark background
+                font: { color: '#ffffff' } // White text
+            };
+
+            // Render the plots
+            Plotly.newPlot(`stock-chart-${ticker}`, plotData1, layout1);
+            Plotly.newPlot(`macd-chart-${ticker}`, plotData2, layout2);
+        }
+
+        // Function to remove a stock container
+        function removeStock(ticker) {
+            $(`#container-${ticker}`).remove();
+        }
+    </script>
+</body>
+</html>

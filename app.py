@@ -29,8 +29,20 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     # You can pass dynamic data here if needed
+    logging.info(f"Index Webpage loaded at {datetime.now()}")
     return render_template('index.html')
-    return "Stock Tracker is running!"
+
+# Route for the explore page
+@app.route('/explore')
+def explore():
+    logging.info(f"Explore Webpage loaded at {datetime.now()}")
+    return render_template('explore.html')
+
+# Route for the continuous page
+@app.route('/continuous')
+def continuous():
+    return render_template('continuous.html')
+
 
 cached_price = None
 cached_time = None
@@ -453,3 +465,4 @@ def get_stock_data():
 if __name__ == "__main__":
     # Run the app with debug mode turned off
     app.run(debug=False, use_reloader=False)
+
