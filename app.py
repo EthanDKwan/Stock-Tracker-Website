@@ -154,7 +154,7 @@ def monitor_hard_coded_ticker():
                 f"Please review accordingly."
                 )
                 
-                send_notification(subject = subject, body = body, to_emial = "edkwan1@gmail.com")
+                send_notification(subject = subject, body = body, to_email = "edkwan1@gmail.com")
             else:
                 logging.error(f"Unexpected buy signal for {CURRENTLY_TRADED_TICKER}: {current_buy_signal}")
 
