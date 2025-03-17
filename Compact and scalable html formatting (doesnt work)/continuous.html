@@ -1,180 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Tracker - Continuous</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        nav {
-            background-color: #333;
-            padding: 10px;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-        }
-        nav ul li {
-            margin: 0 15px;
-        }
-        nav ul li a {
-            color: white;
-            text-decoration: none;
-            font-size: 18px;
-        }
-        nav ul li a:hover {
-            color: #007BFF;
-        }
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(to right, #00bcd4, #8e44ad);
-            color: #333; /* Dark gray text */
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            color: white;
-            margin-bottom: 5px;
-            font-size: 2.5rem;
-            text-align: center;
-        }
-	h3 {
-            color: white;
-            margin-bottom: 5px;
-            font-size: 1.5rem;
-            text-align: center;
-        }
-	h3 .tooltip {
-   	 visibility: hidden; /* Hide the tooltip by default */
-  	  width: 300px; /* Set the width of the tooltip */
-  	  background-color: #333; /* Dark background */
-   	  color: #fff; /* White text */
-	  font-size: 1rem;
-   	  text-align: center;
-  	  border-radius: 5px;
-  	  padding: 10px;
-  	  position: absolute; /* Position the tooltip */
-  	  z-index: 1; /* Ensure it appears above other elements */
-  	  left: 70%; /* Center the tooltip */
-  	  margin-left: -150px; /* Adjust for centering (half of the width) */
-  	  opacity: 0; /* Start fully transparent */
-  	  transition: opacity 0.3s; /* Smooth fade-in effect */
-	}
+{% block title %}Continuous Monitoring{% endblock %}
 
-	h3:hover .tooltip {
-   	 visibility: visible; /* Show the tooltip on hover */
-  	  opacity: 1; /* Fully visible */
-	}
+{% block content %}
 
-
-        #stock-containers {
-            width: 100%; /* Ensure it takes up the full width */
-            max-width: none; /* Remove any max-width constraints */
-            margin: 0; /* Remove margins */
-            padding: 0; /* Remove padding */
-        }
-
-        .stock-container {
-            width: 100%; /* Ensure it takes up the full width */
-            max-width: none; /* Remove any max-width constraints */
-            margin: 0; /* Remove margins */
-            padding: 20px;
-            box-sizing: border-box; 
-            background-color: #ffffff; /* White background */
-            border-radius: 8px;
-            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 20px; /* Space between stock-info and stock-charts */
-        }
-
-        .stock-info {
-            flex: 1; /* Allow stock-info to grow */
-            max-width: 400px; /* Limit the width of stock-info */
-            background-color: #f0f0f0; /* Soft gray background */
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0; /* Light gray border */
-        }
-
-        .stock-info h2 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #333; /* Dark gray text */
-        }
-
-        .stock-info p {
-            font-size: 18px;
-            margin: 10px 0;
-            color: #333; /* Dark gray text */
-        }
-
-        .stock-info span {
-            font-weight: bold;
-            font-size: 20px;
-            color: #333; /* Dark gray text */
-        }
-
-        .stock-charts {
-            flex: 2; /* Allow stock-charts to grow more than stock-info */
-            display: flex;
-            flex-direction: column;
-            gap: 10px; /* Space between charts */
-        }
-
-        .stock-chart, .macd-chart {
-            width: 95%; /* Take up the full width of the parent */
-            height: 275px; /* Keep the height fixed */
-            background-color: #2c3e50; /* Dark blue-gray background */
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #34495e; /* Slightly lighter border */
-        }
-
-        /* Adjust Plotly chart styles */
-        .g-title {
-            fill: #ffffff !important; /* White title text */
-            font-size: 16px !important;
-        }
-
-        .xtitle, .ytitle {
-            fill: #ffffff !important; /* White axis titles */
-        }
-0
-        .xaxis, .yaxis {
-            color: #95a5a6 !important; /* Light gray axis labels */
-        }
-
-        .gridpath {
-            stroke: #95a5a6 !important; /* Light gray grid lines */
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Navigation Bar -->
-    <nav>
-        <ul>
-            <li><a href="/continuous">Continuous Monitoring</a></li>
-            <li><a href="/explore">Explore Stocks</a></li>
-        </ul>
-    </nav>
-
+<!-- extended formatting from base.html --> 
 
     <h1>Stock Tracker - Live Monitor</h1>
-    <h3>
-    Currently Monitoring Ultra ProShares QQQ (Nasdaq:TQQQ)
-    <span class="tooltip">TQQQ (ProShares UltraPro QQQ) tracks the Nasdaq-100 Index, providing 3x leveraged exposure to the daily performance of the Nasdaq-100 Index. Our trading strategy attempts to capitalize on the volatility of the tech-dominant nasdaq-100 </span>
-    </h3>
+    <h3>Currently Monitoring Ultra ProShares QQQ (Nasdaq:TQQQ) <span class="tooltip">TQQQ (ProShares UltraPro QQQ) tracks the Nasdaq-100 Index, providing 3x leveraged exposure to the daily performance of the Nasdaq-100 Index. Our trading strategy attempts to capitalize on the volatility of the tech-dominant nasdaq-100 </span></h3>
 
     <!-- Container for dynamic stock container -->
     <div id="stock-containers"></div>
@@ -195,7 +28,13 @@
                     // Create a new stock container
                     var stockContainer = `
                         <div class="stock-container" id="container-${data.ticker}">
-                            <!-- Stock Info -->
+                            <!-- Left Panel (Charts) -->
+                            <div class="chart-panel">
+                                <div id="stock-chart-${data.ticker}" class="stock-chart"></div>
+                                <div id="macd-chart-${data.ticker}" class="macd-chart"></div>
+                            </div>
+
+                            <!-- Right Panel (Stock Info) -->
                             <div class="stock-info">
                                 <h2>${data.ticker}</h2>
                                 <p>Current Price: <span>${data.current_price}</span></p>
@@ -206,14 +45,8 @@
                                 <p>Histogram: <span>${data.current_histogram}</span></p>
                                 <p>Buy Signal: <span>${data.current_buy_signal}</span></p>
                                 <p>Sell Signal: <span>${data.current_sell_signal}</span></p>
-				<p>Most Recent Buy Signal Notification: <span>${data.most_recent_buy_signal_date}</span></p>
+                                <p>Most Recent Buy Signal Notification: <span>${data.most_recent_buy_signal_date}</span></p>
                                 <p>Most Recent Sell Signal Notification: <span>${data.most_recent_sell_signal_date}</span></p>
-                            </div>
-
-                            <!-- Stock Charts -->
-                            <div class="stock-charts">
-                                <div id="stock-chart-${data.ticker}" class="stock-chart"></div>
-                                <div id="macd-chart-${data.ticker}" class="macd-chart"></div>
                             </div>
                         </div>
                     `;
@@ -347,27 +180,29 @@
             var layout1 = {
                 title: {
                     text: ticker + ' Price and SMAs',
-                    font: { size: 16, color: '#ffffff' }, // White title text
+                    font: { size: 16, color: '#ffffff' }, 
                     y: 0.95
                 },
-                margin: { t: 30, b: 40, l: 50, r: 20 },
-                yaxis: { title: 'Price (USD)', color: '#95a5a6' }, // Light gray axis labels
+                margin: { t: 30, b: 40, l: 10, r: 10 },
+                yaxis: { title: 'Price (USD)', color: '#95a5a6' },
                 plot_bgcolor: '#2c3e50', // Dark background
                 paper_bgcolor: '#2c3e50', // Dark background
-                font: { color: '#ffffff' } // White text
+                font: { color: '#ffffff' }, // White text
+		width: document.getElementById(`stock-chart-${ticker}`).offsetWidth
             };
 
             var layout2 = {
                 title: {
                     text: ticker + ' Indicators',
-                    font: { size: 16, color: '#ffffff' }, // White title text
+                    font: { size: 16, color: '#ffffff' },
                     y: 0.95
                 },
                 margin: { t: 30, b: 40, l: 50, r: 20 },
-                yaxis: { title: 'Value', color: '#95a5a6' }, // Light gray axis labels
+                yaxis: { title: 'Value', color: '#95a5a6' },
                 plot_bgcolor: '#2c3e50', // Dark background
                 paper_bgcolor: '#2c3e50', // Dark background
-                font: { color: '#ffffff' } // White text
+                font: { color: '#ffffff' }, // White text
+		width: document.getElementById(`macd-chart-${ticker}`).offsetWidth
             };
 
             // Render the plots
@@ -380,9 +215,5 @@
             fetchContinuousStockData(); // Initial fetch
         });
     </script>
-<footer>
-    <p>&copy; 2025 Stock Tracker. EDK. Licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">GNU General Public License</a>.</p>
-</footer>
 
-</body>
-</html>
+{% endblock %}

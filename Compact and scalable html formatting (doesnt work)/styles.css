@@ -1,0 +1,161 @@
+/* General Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(to right, #00bcd4, #8e44ad);
+    color: #333; /* Dark gray text */
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
+h1 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 2.5rem;
+    text-align: center;
+}
+
+/* Tooltip for h3 */
+h3 {
+    position: relative; /* Required for tooltip positioning */
+    display: inline-block; /* Ensure the tooltip aligns with the text */
+}
+
+h3 .tooltip {
+    visibility: hidden; /* Hide the tooltip by default */
+    width: 300px; /* Set the width of the tooltip */
+    background-color: #333; /* Dark background */
+    color: #fff; /* White text */
+    text-align: center;
+    border-radius: 5px;
+    padding: 10px;
+    position: absolute; /* Position the tooltip */
+    z-index: 1; /* Ensure it appears above other elements */
+    bottom: 125%; /* Position above the h3 element */
+    left: 50%; /* Center the tooltip */
+    margin-left: -150px; /* Adjust for centering (half of the width) */
+    opacity: 0; /* Start fully transparent */
+    transition: opacity 0.3s; /* Smooth fade-in effect */
+}
+
+h3:hover .tooltip {
+    visibility: visible; /* Show the tooltip on hover */
+    opacity: 1; /* Fully visible */
+}
+
+/* Navigation Bar */
+nav {
+    background-color: #333;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+nav ul li {
+    display: inline;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav ul li a:hover {
+    text-decoration: underline;
+}
+
+/* Stock Container */
+.stock-container {
+    width: 100 vw%; /* Full width of the parent */
+    max-width: none; /* Remove any max-width constraints */
+    margin: 0;
+    padding: 20px; /* Add some padding */
+    background-color: #ffffff; /* White background */
+    border-radius: 8px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    display: flex; /* Use flexbox for layout */
+    gap: 20px; /* Space between charts and stock-info */
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+/* Left Panel (Charts) */
+.chart-panel {
+    flex: 3; /* Take up 3 parts of the available space */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between charts */
+    width: 100%;
+}
+
+/* Right Panel (Stock Info) */
+.stock-info {
+    flex: 1; /* Take up 1 part of the available space */
+    max-width: 300px; /* Limit the width of stock-info */
+    background-color: #f0f0f0; /* Soft gray background */
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0; /* Light gray border */
+    box-sizing: border-box;
+}
+
+/* Individual Charts */
+.stock-chart, .macd-chart {
+    width: 100%; /* Take up the full width of the parent */
+    height: 350px; /* Fixed height */
+    background-color: #2c3e50; /* Dark blue-gray background */
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #34495e; /* Slightly lighter border */
+    box-sizing: border-box; /* Include padding and border in the width/height */
+    margin: 0;
+}
+
+/* Stock Info Styling */
+.stock-info h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #333; /* Dark gray text */
+}
+
+.stock-info p {
+    font-size: 18px;
+    margin: 10px 0;
+    color: #333; /* Dark gray text */
+}
+
+.stock-info span {
+    font-weight: bold;
+    font-size: 20px;
+    color: #333; /* Dark gray text */
+}
+
+.stock-info button {
+    padding: 10px; /* Inner padding */
+    font-size: 18px; /* Font size */
+    background-color: #8e44ad; /* Purple button */
+    color: white; /* White text */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Rounded corners */
+    width: 100%; /* Full width of the parent */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth hover effect */
+}
+
+.stock-info button:hover {
+    background-color: #6a1b9a; /* Darker purple on hover */
+}

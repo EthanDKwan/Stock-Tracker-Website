@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Stock Tracker{% endblock %}</title>
 
+    <!-- Add your CSS files here -->
+<!-- APPARENTLY I SHOULD MAKE A CSS WITH THE CYAN GRADIENT THEME-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Add any additional CSS files (e.g., Bootstrap, FontAwesome) -->
+
+
+    <!-- Add your JavaScript files here (if needed in the head) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
