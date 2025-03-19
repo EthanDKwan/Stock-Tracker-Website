@@ -48,7 +48,7 @@ This project features a semi-automated, rule-based trading algorithm that:
 
 - Minimizes attention, time, and knowledge requirements while aiming to outperform the market.
 
-Note: The moonshot goal remains challenging for multi-trillion-dollar financial industries. Short of this moonshot, I aim to learn and build something interesting along the way.
+Note: The moonshot goal remains challenging for multi-trillion-dollar financial industries. Short of this moonshot, let's learn and build something interesting along the way.
 
 Author:
 Ethan D. Kwan

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Tracker - About</title>
+    <style>
+        /* Navigation Bar */
+        nav {
+            background-color: #333;
+            padding: 10px;
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav ul li {
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        nav ul li a:hover {
+            color: #007BFF;
+        }
+
+        /* Body and Background */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #00bcd4, #8e44ad);
+            color: #333; /* Dark gray text */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        /* Container for About Text */
+        .about-container {
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            margin: 50px 0;
+        }
+
+        .about-container h1 {
+            color: #333; /* Dark gray text */
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .about-container p {
+	    text-align:left;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333; /* Dark gray text */
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+            width: 100%;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0px -4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 16px;
+            color: #333; /* Dark gray text */
+        }
+
+        footer a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <ul>
+            <li><a href="/continuous">Continuous Monitoring</a></li>
+            <li><a href="/explore">Explore Stocks</a></li>
+            <li><a href="/about">About</a></li>
+        </ul>
+    </nav>
+
+    <!-- About Container -->
+    <div class="about-container">
+        <h1>About</h1>
+        <p>
+
+Problem Statement:
+The casual stock trader/investor often does not continuously monitor stock movements or incorporate short-term price changes (e.g., due to news, financial reports, or patents). Instead, they may buy a market-conglomerate ETF and adopt a "set-and-forget" strategy. While effective, this raises the question: Can a more informed trading strategy be implemented to help while requiring minimal attention, knowledge, and time?
+<br>
+Concept <br>
+This project features a semi-automated, rule-based trading algorithm that: <br>
+
+- Runs continuously in the background. <br>
+
+- Notifies users of potential trading opportunities based on pre-defined strategies. <br>
+
+- Minimizes attention, time, and knowledge requirements while aiming to outperform the market. <br>
+
+Note: The moonshot goal remains challenging for multi-trillion-dollar financial industries. Short of this moonshot, let's learn and build something interesting along the way. <br>
+            We hope you find it useful and intuitive to use!
+</p>
+
+<h1>
+
+             STONKS by EDK </h1>
+<p>
+
+A web application for tracking stock prices and generating buy/sell signals using historical and real-time data. <br>
+
+## Features <br>
+- **Real-time stock price tracking**: Monitor live stock prices. <br>
+- **Automated Buy/sell signal generation**: Based on technical indicators (e.g., SMA, MACD). <br>
+- **Interactive graphs**: Visualize data using Plotly.<br>
+- **Notifications**: Get alerts for buy/sell signals via email.<br>
+ <br>
+## Technologies Used <br>
+- **Frontend**: HTML, CSS, JavaScript, Plotly<br>
+- **Backend**: Python, Flask<br>
+- **APIs**: yfinance, AlphaVantage API <br>
+<br>
+## Pages <br>
+  
+-Explore: Enter a stock ticker (e.g., AAPL) to view historical data and buy/sell signals. <br>
+
+-Continuous monitoring: Real-time updates and notifications. <br>
+ <br>
+## License <br>
+This project is licensed under the GNU General Public License v3.0.
+
+        </p>
+        
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Stock Tracker. EDK. Licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">GNU General Public License</a>.</p>
+    </footer>
+</body>
+</html>

@@ -82,6 +82,11 @@ def explore():
 def continuous():
     return render_template('continuous.html')
 
+# Route for the explore page
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 # Run the app
 if __name__ == "__main__":
     # Run the app with debug mode turned off
