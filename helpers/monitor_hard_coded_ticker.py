@@ -12,6 +12,7 @@ from helpers.generate_signals import generate_signals
 from helpers.send_notification import send_notification
 
 import logging
+import yfinance as yf
 from datetime import datetime
 
 

@@ -13,37 +13,15 @@ from helpers.generate_signals import generate_signals
 from helpers.prepare_frontend_data import prepare_frontend_data
 from helpers.monitored_job import monitored_job
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
-import pytz
-import atexit
 import logging
 
 app = Flask(__name__)
 
 DEFAULT_TICKER = "SPY"
-interval = 15 #minutes interval for auto-monitor job
 
-#Initialize the scheduler
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-scheduler = BackgroundScheduler(timezone=pytz.timezone('America/New_York'))
-scheduler.add_job(
-    func=monitored_job,
-    trigger=CronTrigger(
-        day_of_week='mon-fri',  # Monday to Friday
-        hour='9-16',            # 9 AM to 3 PM (inclusive)
-        minute=f'*/{interval}',             # Start at the top of the hour
-        timezone='America/New_York'),
-    max_instances=1,  # Prevent overlapping jobs
-    id = 'cron_run')
-
-# Start the scheduler
-scheduler.start()
-logging.info("Scheduler started. Monitoring every {interval} minutes between 9:30AM -4:00 PM, Mon-Fri.")
-# Shut down the scheduler
-atexit.register(lambda: scheduler.shutdown())
-logging.info("Scheduler shutdown handler registered.")
+logging.info("Scheduler task pinged. Monitoring every interval between 9:30AM -4:00 PM, Mon-Fri.")
+monitored_job()
 
 @app.route('/get_stock_data', methods=['GET'])
 def get_stock_data():
@@ -85,7 +63,7 @@ def continuous():
 # Route for the explore page
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    return render_template('explore.html')
 
 # Run the app
 if __name__ == "__main__":
