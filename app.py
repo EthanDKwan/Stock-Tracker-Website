@@ -20,9 +20,6 @@ app = Flask(__name__)
 
 DEFAULT_TICKER = "SPY"
 
-logging.info("Scheduler task pinged. Monitoring every interval between 9:30AM -4:00 PM, Mon-Fri.")
-monitored_job()
-
 @app.route('/get_stock_data', methods=['GET'])
 def get_stock_data():
     """ Handle on-demand requests for stock data (Goals 3+4)"""
@@ -46,6 +43,7 @@ def get_stock_data():
 @app.route('/')
 def index():
     # You can pass dynamic data here if needed
+    monitored_job()
     logging.info(f"Webpage loaded at {datetime.now()}")
     return render_template('continuous.html')
 
