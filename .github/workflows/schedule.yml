@@ -1,0 +1,11 @@
+name: Scheduled Task
+on:
+  schedule:
+    - cron: '*/1 15-22 * * 1-5'  # Every 15 minutes, 9:30 AM - 4:00 PM CST, weekdays
+jobs:
+  run-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake Flask App
+        run: |
+          curl https://stonksbyedk.onrender.com
