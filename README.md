@@ -28,9 +28,9 @@ Open your browser and navigate to http://localhost:5000.
 Usage
 
 -Explore: Enter a stock ticker (e.g., AAPL) to view historical data and buy/sell signals.
-![Explore page demo](Website Version 2 Explore.png) <br>
+![Explore page demo](WebsiteExploreDemo.png) <br>
 -Continuous monitoring: Real-time updates and notifications.
-![Continuous monitoring page demo](Website Version 2 Continuous.png)
+![Continuous monitoring page demo](WebsiteContinuousDemo.png)
 
 ## License
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
