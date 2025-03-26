@@ -1,4 +1,5 @@
-# Stock Tracker
+# Stock Tracker 
+Currently live at: https://stonksbyEDK.onrender.com/
 
 A web application for tracking stock prices and generating buy/sell signals using historical and real-time data.
 
