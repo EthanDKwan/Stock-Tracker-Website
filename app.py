@@ -61,7 +61,7 @@ def continuous():
 # Route for the explore page
 @app.route('/about')
 def about():
-    return render_template('explore.html')
+    return render_template('about.html')
 
 # Run the app
 if __name__ == "__main__":
