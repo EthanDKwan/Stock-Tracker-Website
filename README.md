@@ -50,15 +50,9 @@ This project features a semi-automated, rule-based trading algorithm that:
 
 - Minimizes attention, time, and knowledge requirements while aiming to outperform the market.
 
-Note: The moonshot goal remains challenging for multi-trillion-dollar financial industries. Short of this moonshot, let's learn and build something interesting along the way.
-
-Author:
-Ethan D. Kwan
+Note: As the moonshot goal is somewhat unfeasible, let's learn and build something interesting along the way.
 
 Author's Note:
-This project was conceived and developed starting February 2nd, 2025, as a platform to practice trading knowledge and software development skills.
-
+This project was conceived and developed starting February 2nd, 2025, as a platform to employ trading knowledge and software development skills.
 
 Looking forward to the journey on this project!
-
-Ethan :]
