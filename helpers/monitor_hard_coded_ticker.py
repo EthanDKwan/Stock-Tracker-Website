@@ -19,7 +19,7 @@ from datetime import datetime
 #Includes buy/sell signal definition
 def monitor_hard_coded_ticker():
 
-    CURRENTLY_TRADED_TICKER = "TQQQ"
+    CURRENTLY_TRADED_TICKER = "VOO"
     # Define valid buy and sell signals
     VALID_BUY_SIGNALS = ["Buy 20% max", "Buy 10% max"]  # Add more as needed
     VALID_SELL_SIGNALS = ["Sell 50% max"]
